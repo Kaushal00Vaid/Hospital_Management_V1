@@ -1,0 +1,155 @@
+{% extends "boilerplate.html" %} {% block body %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center">
+      <!-- Left Column: Text Content -->
+      <div class="col-lg-6">
+        <h1 class="hero-title">
+          Your <span class="title">Health</span>, Our Priority.
+        </h1>
+        <p class="hero-subtitle lead my-4">
+          Effortlessly book appointments, manage patient records, and
+          communicate with medical staff.
+        </p>
+        <div class="d-flex">
+          <a href="#" class="btn btn-custom me-3">Book an Appointment</a>
+          <a href="#" class="btn btn-outline-custom">Learn More</a>
+        </div>
+      </div>
+      <!-- Right Column: Image -->
+      <div class="col-lg-6 text-center mt-5 mt-lg-0">
+        <img
+          src="{{ url_for('static', filename='assets/doctor_landingPage.jpg' ) }}"
+          class="img-fluid hero-image"
+          alt="hero-image"
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Feature Section -->
+<section class="features-section py-5">
+  <div class="container">
+    <div class="row text-center mb-5">
+      <div class="col-md-8 mx-auto">
+        <h2 class="section-title">Why Choose Our System?</h2>
+        <p class="section-subtitle lead">
+          We provide a complete solution to streamline hospital operations and
+          enhance patient care.
+        </p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="feature-card text-center p-4">
+          <div class="feature-icon mx-auto mb-3">
+            <i class="fa-solid fa-calendar-check fa-2x"></i>
+          </div>
+          <h5 class="card-title fw-bold">Online Booking</h5>
+          <p class="card-text">
+            Patients can easily schedule, reschedule, or cancel appointments
+            with their preferred doctors from anywhere, at any time.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="feature-card text-center p-4">
+          <div class="feature-icon mx-auto mb-3">
+            <i class="fa-solid fa-file-medical fa-2x"></i>
+          </div>
+          <h5 class="card-title fw-bold">Health Records</h5>
+          <p class="card-text">
+            Access and manage all patient medical histories, prescriptions, and
+            lab results in one secure, centralized location.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-lg-4 col-md-6 mb-4">
+        <div class="feature-card text-center p-4">
+          <div class="feature-icon mx-auto mb-3">
+            <i class="fa-solid fa-shield-halved fa-2x"></i>
+          </div>
+          <h5 class="card-title fw-bold">Secure Patient Portal</h5>
+          <p class="card-text">
+            A dedicated, secure portal for patients to view their health data,
+            communicate with staff, and manage their profiles.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer Section -->
+<footer class="footer bg-light pt-5 pb-4">
+  <div class="container text-center text-md-start">
+    <div class="row gy-4">
+      <div class="col-lg-4 col-md-12 mb-4 mb-lg-0">
+        <h5 class="footer-brand fw-bold theme-text">
+          <i class="fa-solid fa-heart-pulse"></i>
+          <span class="title">CureAID</span>
+        </h5>
+        <p class="text-muted mt-3">
+          A complete solution for seamless hospital management and enhanced
+          patient care.
+        </p>
+        <div class="social-icons-light mt-4">
+          <a href="#" class="social-icon-light"
+            ><i class="fab fa-facebook-f"></i
+          ></a>
+          <a href="#" class="social-icon-light"
+            ><i class="fab fa-twitter"></i
+          ></a>
+          <a href="#" class="social-icon-light"
+            ><i class="fab fa-instagram"></i
+          ></a>
+          <a href="#" class="social-icon-light"
+            ><i class="fab fa-linkedin-in"></i
+          ></a>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-md-4 col-6">
+        <h5 class="fw-bold mb-4">Links</h5>
+        <ul class="list-unstyled">
+          <li><a href="#" class="footer-link-light">About Us</a></li>
+          <li><a href="#" class="footer-link-light">Services</a></li>
+          <li><a href="#" class="footer-link-light">Login</a></li>
+          <li><a href="#" class="footer-link-light">Register</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-3 col-md-4 col-6">
+        <h5 class="fw-bold mb-4">Contact</h5>
+        <ul class="list-unstyled text-muted">
+          <li class="mb-2">128/12 Health St, Mumbai, India</li>
+          <li class="mb-2">contact@cureaid.com</li>
+          <li class="mb-2">+91 5467354904</li>
+        </ul>
+      </div>
+
+      <div class="col-lg-3 col-md-4">
+        <h5 class="fw-bold mb-4">Subscribe</h5>
+        <p class="text-muted">Get the latest updates and news.</p>
+        <form class="d-flex mt-3">
+          <input
+            type="email"
+            class="form-control me-2"
+            placeholder="Your Email"
+          />
+          <button class="btn btn-custom" type="submit">Go</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="copyright text-center text-muted p-3 mt-4">
+    &copy; 2025 CureAID. All Rights Reserved.
+  </div>
+</footer>
+{% endblock %}

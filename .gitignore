@@ -1,0 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+*.egg
+
+.vscode
+
+
+# Python virtual environment
+venv/
+env/
+ENV/
+.venv/
+.python-version
+
+# Flask / app-specific
+instance/
+*.db
+*.sqlite3
+*.log
+
+# Pytest cache
+.pytest_cache/
+
+# VSCode and other IDEs
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+

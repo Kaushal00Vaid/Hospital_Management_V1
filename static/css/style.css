@@ -1,0 +1,228 @@
+/* --- Google Font --- */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap");
+
+/* --- Global Variables & Styles --- */
+:root {
+  --primary-color: #ff6f00; /* A nice, strong orange */
+  --secondary-color: #f8f9fa; /* A light grey for backgrounds */
+  --dark-color: #212529; /* Default dark color */
+  --white-color: #ffffff;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  color: var(--dark-color);
+}
+
+/* --- Theme Specific Classes --- */
+
+/* For text color, as you requested for a title class */
+.title {
+  color: var(--primary-color) !important;
+}
+
+/* Custom button style */
+.btn-custom {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-custom:hover {
+  background-color: #e66000; /* A slightly darker orange for hover */
+  color: var(--white-color);
+}
+
+/* --- Navbar Styling --- */
+.navbar-brand {
+  font-size: 1.5rem;
+}
+
+.navbar .nav-link {
+  font-weight: 600;
+}
+
+/* --- Hero Section Styling --- */
+.hero-section {
+  background-color: var(--secondary-color);
+  padding: 100px 0;
+  overflow: hidden; /* Prevents animation from causing scrollbars */
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--dark-color);
+}
+
+.hero-subtitle {
+  color: #555;
+}
+
+/* Secondary button style */
+.btn-outline-custom {
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+  padding: 8px 25px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-custom:hover {
+  background-color: var(--primary-color);
+  color: var(--white-color);
+}
+
+.hero-image {
+  width: 450px;
+  height: 450px;
+  object-fit: cover;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  animation: floatAnimation 4s ease-in-out infinite;
+}
+
+/* responsive on smaller screens */
+@media (max-width: 768px) {
+  .hero-image {
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+    display: block;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-image {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+@keyframes floatAnimation {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .hero-title {
+    font-size: 2.8rem;
+  }
+  .hero-section {
+    padding: 60px 0;
+    text-align: center;
+  }
+  .d-flex {
+    justify-content: center;
+  }
+}
+
+/* --- Features Section Styling --- */
+.features-section {
+  background-color: var(--white-color); /* A clean white background */
+}
+
+.section-title {
+  font-weight: 700;
+  color: var(--dark-color);
+}
+
+.section-subtitle {
+  color: #6c757d; /* A muted grey for the subtitle */
+}
+
+.feature-card {
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 15px;
+  height: 100%; /* Ensures all cards are the same height */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px); /* Lifts the card on hover */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background-color: var(--primary-color);
+  color: var(--white-color);
+  border-radius: 50%;
+}
+
+.feature-card .card-title {
+  color: var(--dark-color);
+  margin-bottom: 1rem;
+}
+
+/* --- Footer Styling (Light Theme) --- */
+.footer {
+  background-color: var(--secondary-color);
+}
+
+.footer-brand {
+  font-size: 1.5rem;
+}
+
+.footer-link-light {
+  color: var(--dark-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.footer-link-light:hover {
+  color: var(--primary-color); /* Orange hover for links */
+}
+
+.social-icons-light .social-icon-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e9ecef;
+  color: var(--dark-color);
+  text-decoration: none;
+  margin-right: 10px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.social-icons-light .social-icon-light:hover {
+  background-color: var(--primary-color); /* Orange background on hover */
+  color: var(--white-color);
+}
+
+.copyright {
+  border-top: 1px solid #dee2e6;
+}
+
+.footer .form-control {
+  border-color: #dee2e6;
+}
+
+.footer .form-control:focus {
+  box-shadow: 0 0 0 0.25rem rgba(255, 111, 0, 0.25); /* Orange focus glow */
+  border-color: var(--primary-color);
+}
