@@ -226,3 +226,31 @@ body {
   box-shadow: 0 0 0 0.25rem rgba(255, 111, 0, 0.25); /* Orange focus glow */
   border-color: var(--primary-color);
 }
+
+/* --- Authentication Page Styling (for Login & Register) --- */
+.auth-section {
+  background-color: var(--secondary-color); /* Light grey background */
+}
+
+.auth-card {
+  border-radius: 1rem;
+  overflow: hidden; /* Important for keeping the image within the card's rounded corners */
+}
+
+.auth-image-bg {
+  background: url("https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070")
+    center center;
+  background-size: cover;
+  height: 100%;
+}
+
+.auth-card .form-control {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ced4da;
+}
+
+.auth-card .form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(255, 111, 0, 0.25);
+}
