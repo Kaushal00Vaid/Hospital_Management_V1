@@ -44,3 +44,17 @@ def doctor_auth_required(func):
             return redirect(url_for('login'))
         return func(*args, **kwargs)
     return inner
+
+# authentication for admin OR patient
+def admin_or_patient_auth_required(func):
+    @wraps(func)
+    def inner(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'danger')
+            return redirect(url_for('login'))
+        user = User.query.get(session["user_id"])
+        if user.role != "Admin" and user.role != "Patient":
+            flash('Access denied. Only Admin or Patient can access this page',category='danger')
+            return redirect(url_for('login'))
+        return func(*args, **kwargs)
+    return inner

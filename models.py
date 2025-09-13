@@ -15,6 +15,9 @@ class User(db.Model):
     role = db.Column(db.String(20), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
+    doctor_profile = db.relationship('Doctor', backref='user', uselist=False, cascade="all, delete-orphan")
+    patient_profile = db.relationship('Patient', backref='user', uselist=False, cascade="all, delete-orphan")
+
     # hashing password
     def set_password(self, password):
         self.password = generate_password_hash(password)
@@ -51,7 +54,7 @@ class Doctor(db.Model):
 
     # doctor is "one" user (doctor.user)
     # uselist for specifying one to one instead of one to many
-    user = db.relationship("User", backref=db.backref("doctor", lazy=True, uselist=False))
+    # user = db.relationship("User", backref=db.backref("doctor", lazy=True, uselist=False))
 
 class Patient(db.Model):
     __tablename__ = "patients"
@@ -64,7 +67,7 @@ class Patient(db.Model):
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
 
-    user = db.relationship("User", backref=db.backref("patient", uselist=False))
+    # user = db.relationship("User", backref=db.backref("patient", uselist=False))
 
 class Appointment(db.Model):
     __tablename__ = "appointments"

@@ -92,6 +92,7 @@
             <li class="nav-item">
               <a class="nav-link" href="#">Services</a>
             </li>
+            {% if 'user_id' not in session %}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('login' ) }}">Login</a>
             </li>
@@ -100,6 +101,13 @@
                 >Register</a
               >
             </li>
+            {% else %}
+            <li class="nav-item ms-lg-2">
+              <form action="{{url_for('logout')}}" method="POST">
+                <button class="btn btn-custom" type="submit">Logout</button>
+              </form>
+            </li>
+            {% endif %}
           </ul>
         </div>
       </div>

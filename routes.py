@@ -1,13 +1,15 @@
 from app import app
 from flask import render_template, request, flash, redirect, url_for, session
-from helper import admin_auth_required, patient_auth_required, doctor_auth_required
-from models import db, User, Patient, Doctor
+from sqlalchemy import or_
+from datetime import date
+from helper import admin_auth_required, patient_auth_required, doctor_auth_required, admin_or_patient_auth_required
+from models import db, User, Patient, Doctor, Appointment
 
 @app.route("/")
 def home():
     return render_template("landing.html")
 
-# ------ User Authentication ---------
+# --------------- AUTHENTICATION AND RBAC ----------------
 
 # patient register
 @app.route("/register", methods=["GET", "POST"])
@@ -68,6 +70,9 @@ def register():
     db.session.add(new_patient)
     db.session.commit()
 
+    if 'user_id' in session:
+        return redirect(url_for("admin_dashboard"))
+    
     return redirect(url_for("login"))
 
 # login for all roles
@@ -109,11 +114,56 @@ def logout():
         session.pop('user_id', None)
         return redirect(url_for("home"))
     
-# ------ Dashboards ---------
+# ------------------------ DASHBOARDS --------------------
 @app.route("/admin/dashboard")
 @admin_auth_required
 def admin_dashboard():
-    return "<h1>Admin Dashboard</h1>" # Placeholder content
+    # search params
+    doctor_query = request.args.get('doctor_search', '')
+    patient_query = request.args.get('patient_search', '')
+
+    # base
+    doctors_base_query = db.session.query(User, Doctor).join(Doctor, User.id == Doctor.user_id)
+    patients_base_query = db.session.query(User, Patient).join(Patient, User.id == Patient.user_id)
+
+    # if doctor query
+    if doctor_query:
+        doctors_base_query = doctors_base_query.filter(
+            or_(
+                User.name.ilike(f'%{doctor_query}%'),
+                Doctor.specialization.ilike(f'%{doctor_query}%')
+            )
+        )
+    
+    # if patient query
+    if patient_query:
+        # Check if the query is a number for ID search
+        search_id = None
+        try:
+            search_id = int(patient_query)
+        except ValueError:
+            pass # Not a number, so don't search by ID
+
+        patient_filter_conditions = [
+            User.name.ilike(f'%{patient_query}%'),
+            Patient.phone.ilike(f'%{patient_query}%')
+        ]
+        
+        if search_id is not None:
+            patient_filter_conditions.append(Patient.id == search_id)
+
+        patients_base_query = patients_base_query.filter(or_(*patient_filter_conditions))
+    
+    doctors = doctors_base_query.all()
+    patients = patients_base_query.all()
+    appointments = Appointment.query.all()
+
+    today_appointments = [i for i in appointments if i.appointment_date.date() == date.today()]
+    no_of_appointment_today = len(today_appointments)
+
+
+    return render_template("admin/dashboard.html", doctors=doctors, patients=patients, no_of_appointment_today=no_of_appointment_today, appointments=appointments,doctor_query=doctor_query,
+        patient_query=patient_query)
 
 @app.route("/user/dashboard")
 @patient_auth_required
@@ -124,6 +174,8 @@ def user_dashboard():
 @doctor_auth_required
 def doctor_dashboard():
     return "<h1>Doctor Dashboard</h1>" # Placeholder content
+
+# ------------------------ ADMIN ROUTES -------------------
 
 # Doctor Register
 @app.route("/admin/doctor_register", methods=["GET", "POST"])
@@ -157,6 +209,9 @@ def doctor_register():
     
     # create User
     newUser = User(email=email, name=name, password=password, role="Doctor")
+
+    # print(newUser) # debug print
+
     newUser.set_password(password)
     db.session.add(newUser)
 
@@ -168,4 +223,134 @@ def doctor_register():
     db.session.add(new_doctor)
     db.session.commit()
 
+    if 'user_id' in session:
+        return redirect(url_for("admin_dashboard"))
+
     return redirect(url_for("login"))
+
+# edit doc
+@app.route("/admin/doctor/edit/<int:doctor_id>", methods=['GET', 'POST'])
+@admin_auth_required
+def edit_doctor(doctor_id):
+    
+    # get doc detail (join User and Doctor)
+    doctor_data = db.session.query(User, Doctor).join(Doctor, User.id == Doctor.user_id).filter(Doctor.id == doctor_id).first_or_404()
+
+    # print(doctor_data) # debug print
+    
+    if request.method == 'POST':
+        user_to_update = doctor_data.User
+        doctor_to_update = doctor_data.Doctor
+
+        # form data
+        user_to_update.name = request.form.get('name')
+        new_email = request.form.get('email')
+        doctor_to_update.specialization = request.form.get('specialization')
+        doctor_to_update.phone = request.form.get('phone')
+        doctor_to_update.availability = request.form.get('availability')
+
+        # repeated email check
+        if new_email != user_to_update.email:
+            # print(edit checkpoint) # debug print
+            existing_user = User.query.filter_by(email=new_email).first()
+            if existing_user:
+                flash('That email address is already registered.', 'danger')
+                return render_template("admin/edit_doctor.html", doctor_data=doctor_data)
+        
+        user_to_update.email = new_email
+        
+        db.session.commit()
+        
+        flash(f'Doctor {user_to_update.name}\'s profile has been updated!', 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    # if get
+    return render_template("admin/edit_doctor.html", doctor_data=doctor_data)
+
+# delete doc
+@app.route("/admin/doctor/delete/<int:doctor_id>", methods=['POST'])
+@admin_auth_required
+def delete_doctor(doctor_id):
+
+    # print("delete ghus gaya bhai") # debug print
+
+    # get doc and user
+    doctor_to_delete = Doctor.query.get_or_404(doctor_id)
+    user_to_delete = User.query.get_or_404(doctor_to_delete.user_id)
+    
+    # for flash
+    doctor_name = user_to_delete.name
+    
+    db.session.delete(user_to_delete)
+    db.session.commit()
+    
+    flash(f'Doctor {doctor_name} has been successfully deleted.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+# edit patient
+@app.route("/patient/edit/<int:patient_id>", methods=['GET', 'POST'])
+@admin_or_patient_auth_required  
+def edit_patient(patient_id):
+    # login detail
+    current_user = User.query.get(session['user_id'])
+    
+    # get patient profile
+    patient_to_edit = Patient.query.get_or_404(patient_id)
+
+    # patient only updating his profile (not others)
+    if current_user.role == 'Patient' and current_user.id != patient_to_edit.user_id:
+        flash('You are not authorized to view or edit this profile.', 'danger')
+        return redirect(url_for('user_dashboard'))
+
+    patient_data = db.session.query(User, Patient).join(Patient, User.id == Patient.user_id).filter(Patient.id == patient_id).first()
+
+    if request.method == 'POST':
+        user_to_update = patient_data.User
+        patient_to_update = patient_data.Patient
+
+        # Update fields...
+        user_to_update.name = request.form.get('name')
+
+        # repeated email check
+        if request.form.get('email') != user_to_update.email:
+            # print(edit checkpoint) # debug print
+            existing_user = User.query.filter_by(email=request.form.get('email')).first()
+            if existing_user:
+                flash('That email address is already registered.', 'danger')
+                # print("email change kr (edit patient)") # debug print
+                return render_template("patient/edit_patient.html", patient_data=patient_data)
+        user_to_update.email = request.form.get('email') 
+
+        patient_to_update.phone = request.form.get('phone')
+        patient_to_update.age = request.form.get('age')
+        patient_to_update.gender = request.form.get('gender')
+        patient_to_update.blood_group = request.form.get('bloodGroup')
+        patient_to_update.address = request.form.get('address')
+        
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+
+        if current_user.role == 'Admin':
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return redirect(url_for('user_dashboard'))
+
+    return render_template('patient/edit_patient.html', patient_data=patient_data)
+
+# delete patient
+@app.route("/admin/patient/delete/<int:patient_id>", methods=['POST'])
+@admin_auth_required
+def delete_patient(patient_id):
+    patient_to_delete = Patient.query.get_or_404(patient_id)
+    user_to_delete = User.query.get_or_404(patient_to_delete.user_id)
+    
+    # for flash
+    patient_name = user_to_delete.name
+
+    db.session.delete(user_to_delete)
+    db.session.commit()
+    
+    flash(f'Patient {patient_name} and all associated data have been permanently deleted.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
