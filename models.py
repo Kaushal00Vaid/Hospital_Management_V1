@@ -86,28 +86,28 @@ class Treatment(db.Model):
     __tablename__ = "treatments"
 
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
-    doctor_id = db.Column(db.Integer, db.ForeignKey("doctors.id"), nullable=False)
+    
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id"), nullable=False, unique=True)
+    
     diagnosis = db.Column(db.Text)
     prescription = db.Column(db.Text)
     record_date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     notes = db.Column(db.Text)
 
-    patient = db.relationship("Patient", backref=db.backref("treatments", cascade="all, delete-orphan"))
-    doctor = db.relationship("Doctor", backref=db.backref("treatments_given", cascade="all, delete-orphan"))
+    appointment = db.relationship("Appointment", backref=db.backref("treatment", uselist=False, cascade="all, delete-orphan"))
+    
     
 class Payment(db.Model):
     __tablename__ = "payment"
 
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey("patients.id"), nullable=False)
-    appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id"))
+    
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id"), nullable=False, unique=True)
     amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending, paid
     billing_date = db.Column(db.DateTime, default=datetime.now(timezone.utc))
 
-    patient = db.relationship("Patient", backref=db.backref("bills", cascade="all, delete-orphan"))
-    appointment = db.relationship("Appointment", backref=db.backref("billing", uselist=False))
+    appointment = db.relationship("Appointment", backref=db.backref("payment", uselist=False, cascade="all, delete-orphan"))
 
 
 def create_tables():

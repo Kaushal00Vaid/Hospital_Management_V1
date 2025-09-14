@@ -1,9 +1,9 @@
 from app import app
 from flask import render_template, request, flash, redirect, url_for, session
 from sqlalchemy import or_
-from datetime import date
+from datetime import date, timedelta
 from helper import admin_auth_required, patient_auth_required, doctor_auth_required, admin_or_patient_auth_required
-from models import db, User, Patient, Doctor, Appointment
+from models import db, User, Patient, Doctor, Appointment, Treatment, Payment
 
 @app.route("/")
 def home():
@@ -173,7 +173,28 @@ def user_dashboard():
 @app.route("/doctor/dashboard")
 @doctor_auth_required
 def doctor_dashboard():
-    return "<h1>Doctor Dashboard</h1>" # Placeholder content
+    user_id = session["user_id"]
+    current_user = User.query.get(user_id)
+
+    doctor_profile = Doctor.query.filter_by(user_id=current_user.id).first()
+
+    appointments = Appointment.query.filter_by(doctor_id=doctor_profile.id).order_by(Appointment.appointment_date.desc()).all()
+
+    today_appointments = [i for i in appointments if i.appointment_date.date() == date.today()]
+    today_appointments_count = len(today_appointments)
+
+    today = date.today()
+    next_week = today + timedelta(days=7)
+
+    week_appointments = [apt for apt in appointments if today <= apt.appointment_date.date() < next_week]
+    week_appointments_count = len(week_appointments)
+
+
+    return render_template("doctor/dashboard.html", current_user=current_user,
+    appointments=appointments,
+    today_appointments_count=today_appointments_count,
+    week_appointments_count=week_appointments_count
+    )
 
 # ------------------------ ADMIN ROUTES -------------------
 
@@ -354,3 +375,96 @@ def delete_patient(patient_id):
     return redirect(url_for('admin_dashboard'))
 
 
+# --------------------- Doctor Routes ----------------
+
+# Appointment Detail
+@app.route("/doctor/appointment/<int:appointment_id>")
+@doctor_auth_required
+def appointment_details(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    
+    # Authorization check (Not Implemented) - (copy from below if needed)
+
+    # get treatment
+    treatment = Treatment.query.filter_by(appointment_id=appointment.id).first()
+        
+    return render_template("doctor/appointment_details.html", appointment=appointment, treatment=treatment)
+
+# Mark as cancel
+@app.route("/doctor/appointment/update_status/<int:appointment_id>", methods=['POST'])
+@doctor_auth_required
+def update_appointment_status(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    # Authorization check
+    doctor = Doctor.query.filter_by(user_id=session['user_id']).first()
+    if appointment.doctor_id != doctor.id:
+        flash("You are not authorized to update this appointment.", "danger")
+        return redirect(url_for('doctor_dashboard'))
+
+    new_status = request.form.get('status')
+    if new_status in ['Completed', 'Cancelled']:
+        appointment.status = new_status
+        db.session.commit()
+        flash(f"Appointment has been marked as {new_status}.", "success")
+    
+    return redirect(url_for('doctor_dashboard'))
+
+# Treatment Adding (Diagnosis and etc.)
+@app.route("/doctor/appointment/save_treatment/<int:appointment_id>", methods=['POST'])
+@doctor_auth_required
+def save_treatment(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    
+    doctor = Doctor.query.filter_by(user_id=session['user_id']).first()
+    if appointment.doctor_id != doctor.id:
+        flash("You are not authorized to modify this appointment.", "danger")
+        return redirect(url_for('doctor_dashboard'))
+    
+    # save
+    existing_treatment = Treatment.query.filter_by(appointment_id=appointment.id).first()
+    if existing_treatment:
+        existing_treatment.diagnosis = request.form.get('diagnosis')
+        existing_treatment.prescription = request.form.get('prescription')
+        existing_treatment.notes = request.form.get('notes')
+        flash("Treatment record has been updated.", "success")
+    else:
+        new_treatment = Treatment(
+            appointment_id=appointment.id,
+            diagnosis=request.form.get('diagnosis'),
+            prescription=request.form.get('prescription'),
+            notes=request.form.get('notes')
+        )
+        db.session.add(new_treatment)
+        flash("Treatment record saved successfully.", "success")
+
+    # updating status and payment as paid
+    if appointment.status == 'Scheduled':
+        appointment.status = 'Completed'
+        
+        payment = Payment.query.filter_by(appointment_id=appointment.id).first()
+        if payment:
+            payment.status = 'paid'
+        
+        flash("Appointment marked as completed and payment status updated to paid.", "info")
+
+    db.session.commit()
+    
+    return redirect(url_for('appointment_details', appointment_id=appointment.id))
+
+# Updating own availability
+@app.route("/doctor/update_availability", methods=['GET', 'POST'])
+@doctor_auth_required
+def update_availability():
+    doctor = Doctor.query.filter_by(user_id=session['user_id']).first_or_404()
+
+    if request.method == 'POST':
+        new_availability = request.form.get('availability')
+        
+        doctor.availability = new_availability
+        db.session.commit()
+        
+        flash('Your availability has been updated successfully!', 'success')
+        return redirect(url_for('doctor_dashboard'))
+
+    # if get
+    return render_template("doctor/update_availability.html", doctor=doctor)

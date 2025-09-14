@@ -1,0 +1,134 @@
+{% extends "boilerplate.html" %} {% block body %}
+<div class="dashboard-section py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h4 class="mb-0">Appointment Details</h4>
+          </div>
+          <div class="card-body p-4">
+            <h5>Patient: {{ appointment.patient.user.name }}</h5>
+            <p class="text-muted">
+              Date & Time: {{ appointment.appointment_date.strftime('%Y-%m-%d at
+              %I:%M %p') }}
+            </p>
+            <hr />
+
+            {% if appointment.status == 'scheduled' %}
+            <p><strong>Actions:</strong></p>
+            <div class="d-flex">
+              <form
+                action="{{ url_for('update_appointment_status', appointment_id=appointment.id) }}"
+                method="POST"
+                class="me-2"
+              >
+                <input type="hidden" name="status" value="completed" />
+                <button type="submit" class="btn btn-success">
+                  Mark as Completed
+                </button>
+              </form>
+              <form
+                action="{{ url_for('update_appointment_status', appointment_id=appointment.id) }}"
+                method="POST"
+              >
+                <input type="hidden" name="status" value="cancelled" />
+                <button type="submit" class="btn btn-danger">
+                  Cancel Appointment
+                </button>
+              </form>
+            </div>
+            {% else %}
+            <p>
+              Current Status:
+              <strong class="text-capitalize">{{ appointment.status }}</strong>
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if treatment %}
+        <div class="card shadow-sm">
+          <div
+            class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+          >
+            <h4 class="mb-0">Treatment Record</h4>
+          </div>
+          <div class="card-body p-4">
+            <h5>Diagnosis</h5>
+            <p class="bg-light p-3 rounded">{{ treatment.diagnosis }}</p>
+
+            <h5>Prescription</h5>
+            <p class="bg-light p-3 rounded">{{ treatment.prescription }}</p>
+
+            {% if treatment.notes %}
+            <h5>Additional Notes</h5>
+            <p class="bg-light p-3 rounded">{{ treatment.notes }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        {% else %}
+        <div class="card shadow-sm">
+          <div class="card-header bg-white py-3">
+            <h4 class="mb-0">Add Treatment Record</h4>
+          </div>
+          <div class="card-body p-4">
+            <form
+              action="{{ url_for('save_treatment', appointment_id=appointment.id) }}"
+              method="POST"
+            >
+              <div class="mb-3">
+                <label for="diagnosis" class="form-label">Diagnosis</label>
+                <textarea
+                  class="form-control"
+                  id="diagnosis"
+                  name="diagnosis"
+                  rows="3"
+                  required
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="prescription" class="form-label"
+                  >Prescription</label
+                >
+                <textarea
+                  class="form-control"
+                  id="prescription"
+                  name="prescription"
+                  rows="4"
+                  required
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="notes" class="form-label">Additional Notes</label>
+                <textarea
+                  class="form-control"
+                  id="notes"
+                  name="notes"
+                  rows="2"
+                ></textarea>
+              </div>
+              <button type="submit" class="btn btn-custom">
+                Save Treatment Record
+              </button>
+            </form>
+            <form action="{{ url_for('update_appointment_status', appointment_id=appointment.id) }}" method="POST" class="mt-2">
+        <input type="hidden" name="status" value="Cancelled" />
+        <button type="submit" class="btn btn-danger">
+          Cancel Appointment
+        </button>
+      </form
+          </div>
+        </div>
+        {% endif %}
+        <div class="text-center mt-4">
+          <a href="{{ url_for('doctor_dashboard') }}" class="text-muted"
+            ><i class="fa-solid fa-arrow-left me-2"></i>Go Back to Dashboard</a
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -67,7 +67,13 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Run the Application
+### 4. Seed the database
+
+```sh
+python seed.py
+```
+
+### 5. Run the Application
 
 ```sh
 python app.py

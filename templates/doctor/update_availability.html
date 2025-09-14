@@ -1,0 +1,47 @@
+{% extends "boilerplate.html" %} {% block body %}
+<section class="auth-section">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card auth-card border-0 shadow-lg">
+          <div class="card-body p-lg-5">
+            <h2 class="card-title text-center fw-bold mb-4">
+              Update Your Availability
+            </h2>
+            <p class="text-center text-muted mb-4">
+              Enter your schedule for the upcoming week. For example: "Mon-Fri,
+              10 AM - 2 PM" or "Mon, Wed, Fri, 9 AM - 5 PM".
+            </p>
+
+            <form action="{{ url_for('update_availability') }}" method="POST">
+              <div class="mb-3">
+                <label for="availability" class="form-label"
+                  >Availability Schedule</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="availability"
+                  name="availability"
+                  value="{{ doctor.availability }}"
+                  required
+                />
+              </div>
+              <div class="d-grid">
+                <button type="submit" class="btn btn-custom btn-lg">
+                  Save Schedule
+                </button>
+              </div>
+            </form>
+            <div class="text-center mt-3">
+              <a href="{{ url_for('doctor_dashboard') }}" class="text-muted"
+                >Cancel and return to dashboard</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
