@@ -410,6 +410,19 @@ def delete_patient(patient_id):
     flash(f'Patient {patient_name} and all associated data have been permanently deleted.', 'success')
     return redirect(url_for('admin_dashboard'))
 
+# view patient hitory
+@app.route("/admin/patient_history/<int:patient_id>")
+@admin_auth_required
+def admin_view_patient_history(patient_id):
+    patient = Patient.query.get_or_404(patient_id)
+    
+    appointments = Appointment.query.filter_by(
+        patient_id=patient.id
+    ).order_by(Appointment.appointment_date.desc()).all()
+    
+    return render_template("doctor/patient_history.html", patient=patient, appointments=appointments)
+
+
 
 # --------------------- Doctor Routes ----------------
 
@@ -526,6 +539,21 @@ def book_appointment(doctor_id):
             flash(message, 'danger')
             return redirect(url_for('book_appointment', doctor_id=doctor.id))
         
+        # double book check
+        slot_start = appointment_date
+        slot_end = appointment_date + timedelta(minutes=1)
+
+        existing_appointment = Appointment.query.filter(
+            Appointment.doctor_id == doctor.id,
+            Appointment.status == 'Scheduled',
+            Appointment.appointment_date >= slot_start,
+            Appointment.appointment_date < slot_end
+        ).first()
+
+        if existing_appointment:
+            flash(f"Sorry, Dr. {doctor.user.name} is already booked at this time. Please choose another slot.", 'danger')
+            return redirect(url_for('book_appointment', doctor_id=doctor.id))
+        
         new_appointment = Appointment(
             patient_id=patient.id,
             doctor_id=doctor.id,
@@ -598,6 +626,23 @@ def reschedule_appointment(appointment_id):
         if not is_available:
             flash(message, 'danger')
             return redirect(url_for('reschedule_appointment', appointment_id=appointment.id))
+        
+        # double book check (exc current)
+        slot_start = new_appointment_date
+        slot_end = new_appointment_date + timedelta(minutes=1)
+
+        existing_appointment = Appointment.query.filter(
+            Appointment.doctor_id == appointment.doctor_id,
+            Appointment.status == 'Scheduled',
+            Appointment.appointment_date >= slot_start,
+            Appointment.appointment_date < slot_end,
+            Appointment.id != appointment_id  # Exc curr
+        ).first()
+
+        if existing_appointment:
+            flash(f"Sorry, this time slot is already booked. Please choose another.", 'danger')
+            return redirect(url_for('reschedule_appointment', appointment_id=appointment.id))
+
 
         appointment.appointment_date = new_appointment_date
         db.session.commit()

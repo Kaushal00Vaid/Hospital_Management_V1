@@ -1,0 +1,89 @@
+{% extends "boilerplate.html" %} {% block body %}
+<div class="dashboard-section py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="fw-bold">Medical History</h1>
+        <p class="text-muted fs-5">
+          Patient: <strong>{{ patient.user.name }}</strong> (ID: P-{{ patient.id
+          }})
+        </p>
+      </div>
+      <a href="javascript:history.back()" class="btn btn-secondary"
+        ><i class="fa-solid fa-arrow-left me-2"></i>Go Back</a
+      >
+    </div>
+
+    <div class="card shadow-sm mb-5">
+      <div class="card-header bg-white py-3">
+        <h4 class="mb-0">Patient Details</h4>
+      </div>
+      <div class="card-body p-4">
+        <div class="row">
+          <div class="col-md-4"><strong>Age:</strong> {{ patient.age }}</div>
+          <div class="col-md-4">
+            <strong>Gender:</strong> {{ patient.gender }}
+          </div>
+          <div class="col-md-4">
+            <strong>Blood Group:</strong> {{ patient.blood_group }}
+          </div>
+          <div class="col-md-4 mt-3">
+            <strong>Phone:</strong> {{ patient.phone }}
+          </div>
+          <div class="col-md-4 mt-3">
+            <strong>Address:</strong> {{ patient.address }}
+          </div>
+          <div class="col-md-4 mt-3">
+            <strong>Email:</strong> {{ patient.user.email }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="mb-4">Appointment & Treatment History</h3>
+
+    {% for appointment in appointments %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0">
+          Appointment on {{ appointment.appointment_date.strftime('%B %d, %Y')
+          }}
+        </h5>
+        <small class="text-muted">
+          With Dr. {{ appointment.doctor.user.name }} ({{
+          appointment.doctor.specialization }})
+        </small>
+      </div>
+      <div class="card-body p-4">
+        {% if appointment.treatment %}
+        <h5>Diagnosis</h5>
+        <p class="bg-light p-3 rounded">
+          {{ appointment.treatment.diagnosis }}
+        </p>
+
+        <h5>Prescription</h5>
+        <p class="bg-light p-3 rounded">
+          {{ appointment.treatment.prescription }}
+        </p>
+
+        {% if appointment.treatment.notes %}
+        <h5>Notes</h5>
+        <p class="bg-light p-3 rounded">{{ appointment.treatment.notes }}</p>
+        {% endif %} {% else %}
+        <p class="text-muted">
+          No treatment record was filed for this appointment. (Status: {{
+          appointment.status|capitalize }})
+        </p>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="card shadow-sm">
+      <div class="card-body text-center p-5">
+        <p class="text-muted">This patient has no past appointment records.</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
