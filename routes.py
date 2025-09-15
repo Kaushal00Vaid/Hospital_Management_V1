@@ -1,8 +1,8 @@
 from app import app
 from flask import render_template, request, flash, redirect, url_for, session
 from sqlalchemy import or_
-from datetime import date, timedelta
-from helper import admin_auth_required, patient_auth_required, doctor_auth_required, admin_or_patient_auth_required
+from datetime import date, timedelta, datetime, timezone
+from helper import admin_auth_required, patient_auth_required, doctor_auth_required, admin_or_patient_auth_required, is_doctor_available
 from models import db, User, Patient, Doctor, Appointment, Treatment, Payment
 
 @app.route("/")
@@ -168,7 +168,43 @@ def admin_dashboard():
 @app.route("/user/dashboard")
 @patient_auth_required
 def user_dashboard():
-    return "<h1>Patient Dashboard</h1>" # Placeholder content
+    current_user = User.query.get(session['user_id'])
+    patient_profile = Patient.query.filter_by(user_id=current_user.id).first()
+    
+    # search
+    doctor_query = request.args.get('doctor_search', '')
+    doctors_base_query = db.session.query(User, Doctor).join(Doctor, User.id == Doctor.user_id)
+    if doctor_query:
+        # print("doc ssearch if") # debug print
+        doctors_base_query = doctors_base_query.filter(
+            or_(User.name.ilike(f'%{doctor_query}%'), Doctor.specialization.ilike(f'%{doctor_query}%'))
+        )
+    doctors = doctors_base_query.all()
+
+    # appointments (past and future)
+    now = datetime.now(timezone.utc)
+    upcoming_appointments = Appointment.query.filter(
+        Appointment.patient_id == patient_profile.id,
+        Appointment.appointment_date >= now,
+        Appointment.status.in_(['Scheduled', 'Cancelled'])
+    ).order_by(Appointment.appointment_date.asc()).all()
+
+    # print(upcoming_appointments)
+
+    past_appointments = Appointment.query.filter(
+        Appointment.patient_id == patient_profile.id,
+        Appointment.appointment_date < now,
+        Appointment.status.in_(['Completed', 'Cancelled'])
+    ).order_by(Appointment.appointment_date.desc()).all()
+
+    return render_template(
+        "patient/dashboard.html", 
+        current_user=current_user,
+        doctors=doctors,
+        doctor_query=doctor_query,
+        upcoming_appointments=upcoming_appointments,
+        past_appointments=past_appointments
+    )
 
 @app.route("/doctor/dashboard")
 @doctor_auth_required
@@ -468,3 +504,119 @@ def update_availability():
 
     # if get
     return render_template("doctor/update_availability.html", doctor=doctor)
+
+# -------------------- Patients Routes --------------------
+
+# book appointment
+@app.route("/book_appointment/<int:doctor_id>", methods=['GET', 'POST'])
+@patient_auth_required
+def book_appointment(doctor_id):
+    doctor = Doctor.query.get_or_404(doctor_id)
+    patient = Patient.query.filter_by(user_id=session['user_id']).first()
+
+    if request.method == 'POST':
+        date_str = request.form.get('date')
+        time_str = request.form.get('time')
+        appointment_datetime_str = f"{date_str} {time_str}"
+        appointment_date = datetime.strptime(appointment_datetime_str, '%Y-%m-%d %H:%M')
+
+        # avial check
+        is_available, message = is_doctor_available(appointment_date, doctor.availability)
+        if not is_available:
+            flash(message, 'danger')
+            return redirect(url_for('book_appointment', doctor_id=doctor.id))
+        
+        new_appointment = Appointment(
+            patient_id=patient.id,
+            doctor_id=doctor.id,
+            appointment_date=appointment_date,
+            status='Scheduled',
+            notes=request.form.get('notes')
+        )
+        db.session.add(new_appointment)
+        db.session.commit()
+        
+        flash('Your appointment has been booked successfully!', 'success')
+        return redirect(url_for('user_dashboard'))
+
+    # if get
+    return render_template("patient/book_appointment.html", doctor=doctor)
+
+# find doc (search and book)
+@app.route("/find_doctor")
+@patient_auth_required
+def find_doctor():
+    doctor_query = request.args.get('doctor_search', '')
+    doctors_base_query = db.session.query(User, Doctor).join(Doctor, User.id == Doctor.user_id)
+    if doctor_query:
+        doctors_base_query = doctors_base_query.filter(
+            or_(User.name.ilike(f'%{doctor_query}%'), Doctor.specialization.ilike(f'%{doctor_query}%'))
+        )
+    doctors = doctors_base_query.all()
+
+    return render_template("patient/find_doctor.html", doctors=doctors, doctor_query=doctor_query)
+
+# cancel appointment
+@app.route("/patient/appointment/cancel/<int:appointment_id>", methods=['POST'])
+@patient_auth_required
+def cancel_appointment(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    patient = Patient.query.filter_by(user_id=session['user_id']).first()
+
+    # patient can change only his own
+    if appointment.patient_id != patient.id:
+        flash("You are not authorized to cancel this appointment.", "danger")
+        return redirect(url_for('user_dashboard'))
+
+    appointment.status = 'Cancelled'
+    db.session.commit()
+    
+    flash("Your appointment has been successfully cancelled.", "success")
+    return redirect(url_for('user_dashboard'))
+
+# reschedule
+@app.route("/patient/appointment/reschedule/<int:appointment_id>", methods=['GET', 'POST'])
+@patient_auth_required
+def reschedule_appointment(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    patient = Patient.query.filter_by(user_id=session['user_id']).first()
+
+    if appointment.patient_id != patient.id:
+        flash("You are not authorized to modify this appointment.", "danger")
+        return redirect(url_for('user_dashboard'))
+
+    if request.method == 'POST':
+        date_str = request.form.get('date')
+        time_str = request.form.get('time')
+        
+        # combine date and time
+        new_datetime_str = f"{date_str} {time_str}"
+        new_appointment_date = datetime.strptime(new_datetime_str, '%Y-%m-%d %H:%M')
+
+        # avail check
+        is_available, message = is_doctor_available(new_appointment_date, appointment.doctor.availability)
+        if not is_available:
+            flash(message, 'danger')
+            return redirect(url_for('reschedule_appointment', appointment_id=appointment.id))
+
+        appointment.appointment_date = new_appointment_date
+        db.session.commit()
+        
+        flash('Your appointment has been successfully rescheduled!', 'success')
+        return redirect(url_for('user_dashboard'))
+
+    return render_template("patient/reschedule_appointment.html", appointment=appointment)
+
+# view treat deet
+@app.route("/patient/diagnosis/<int:appointment_id>")
+@patient_auth_required
+def view_diagnosis(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    patient = Patient.query.filter_by(user_id=session['user_id']).first()
+
+    if appointment.patient_id != patient.id:
+        flash("You are not authorized to view this record.", "danger")
+        return redirect(url_for('user_dashboard'))
+
+    # if get
+    return render_template("patient/view_diagnosis.html", appointment=appointment)

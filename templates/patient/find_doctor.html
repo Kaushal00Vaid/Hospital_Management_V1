@@ -1,0 +1,66 @@
+{% extends "boilerplate.html" %} {% block body %}
+<div class="dashboard-section py-5">
+  <div class="container">
+    <h1 class="fw-bold mb-4">Find a Doctor</h1>
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-white p-3">
+        <h4 class="mb-0">Search by Name or Specialty</h4>
+      </div>
+      <div class="card-body">
+        <form
+          action="{{ url_for('find_doctor') }}"
+          method="GET"
+          class="d-flex mb-3"
+        >
+          <input
+            class="form-control me-2"
+            type="search"
+            name="doctor_search"
+            placeholder="e.g., Cardiology or Dr. Smith"
+            value="{{ doctor_query or '' }}"
+          />
+          <button class="btn btn-outline-custom" type="submit">Search</button>
+        </form>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Doctor Name</th>
+                <th>Specialty</th>
+                <th>Availability</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user, doctor in doctors %}
+              <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ doctor.specialization }}</td>
+                <td>{{ doctor.availability }}</td>
+                <td>
+                  <a
+                    href="{{ url_for('book_appointment', doctor_id=doctor.id) }}"
+                    class="btn btn-sm btn-success"
+                    >Book Now</a
+                  >
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center">No doctors found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center mt-3">
+          <a href="{{ url_for('user_dashboard') }}" class="text-muted"
+            >Return to Dashboard</a
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

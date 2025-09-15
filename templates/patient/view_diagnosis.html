@@ -1,0 +1,53 @@
+{% extends "boilerplate.html" %} {% block body %}
+<div class="dashboard-section py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 class="fw-bold">Treatment Record</h1>
+            <p class="text-muted fs-5">
+              Appointment on {{ appointment.appointment_date.strftime('%B %d,
+              %Y') }}
+            </p>
+          </div>
+          <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary"
+            >Back to Dashboard</a
+          >
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-header bg-white py-3">
+            <h4 class="mb-0">
+              Consultation with {{ appointment.doctor.user.name }}
+            </h4>
+          </div>
+          <div class="card-body p-4">
+            {% if appointment.treatment %}
+            <h5>Diagnosis</h5>
+            <p class="bg-light p-3 rounded">
+              {{ appointment.treatment.diagnosis }}
+            </p>
+
+            <h5>Prescription</h5>
+            <p class="bg-light p-3 rounded">
+              {{ appointment.treatment.prescription }}
+            </p>
+
+            {% if appointment.treatment.notes %}
+            <h5>Doctor's Notes</h5>
+            <p class="bg-light p-3 rounded">
+              {{ appointment.treatment.notes }}
+            </p>
+            {% endif %} {% else %}
+            <p class="text-muted">
+              No treatment details were recorded for this appointment.
+            </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
