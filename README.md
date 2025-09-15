@@ -83,6 +83,11 @@ The application will be available at: **http://127.0.0.1:5000/**
 
 ---
 
+### 6. Note
+
+- All user's (Doctor and Patient) password is **test**
+- Admin id pass is **admin@gmail.com** & **admin**
+
 ## License
 
 This project is for educational purposes and follows an open-source license.
